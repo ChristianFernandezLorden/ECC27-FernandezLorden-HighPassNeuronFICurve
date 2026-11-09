@@ -1,0 +1,86 @@
+\documentclass[tikz,border=0pt,10pt]{standalone}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+
+
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{math}
+\usetikzlibrary{intersections}
+\usetikzlibrary{decorations.markings}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{fit}
+
+\usepackage{Nature-colors}
+
+\begin{document}
+    
+\begin{tikzpicture}[
+        >=Triangle,
+        signal style/.style = {
+                font=\normalfont\normalsize,
+            },
+        block style/.style = {
+            font=\normalfont\Large,
+            draw=black,
+            fill=#1,
+            text=black,
+            minimum width=1cm,
+            minimum height=1cm,
+            text centered,
+            rounded corners=0.2cm,
+        },
+        block style/.default = white,
+        sum block style/.style = {
+            circle, 
+            draw=black, 
+            fill = white,
+            font=\normalfont\scriptsize,
+            inner sep=1pt,
+        },
+    ]
+    \colorlet{colorCycle}{natureBlue}
+    \colorlet{colorPhiNull}{black}
+    \colorlet{colorVertNull}{natureOrange}
+
+    \colorlet{axisColor}{black!20}
+    \colorlet{plotGreyColor}{black!60}
+    \colorlet{textGreyColor}{black!60}
+
+    
+    \draw[->] (0.0,0.0) -- ++(0,-1cm) node[anchor=east, pos=0.5, signal style] (input) {$u$} node[anchor=north,sum block style] (sum) {$+$};
+    \draw[->] (sum) -- ++(1cm,0) node[anchor=south, pos=0.5, signal style] (sigma_input) {$v$} node[anchor=west, block style=colorCycle!70, text=black] (sigma) {$\sigma(\cdot)$};
+    \draw[<-] (sum) -- ++(-1cm,0) node[anchor=south, pos=0.5, signal style] (filter_output) {$w$} node[anchor=east, sum block style] (inner_sum) {$-$};
+    \node[anchor=north east, block style] (low_pass) at ([shift={(-1cm,-0.1cm)}]inner_sum.center) {$\frac{1}{\tau s + 1}$};
+    \node[anchor=south, block style] (unit_gain) at ([yshift=0.2cm]low_pass.north) {$1$};
+    \draw[->] (low_pass.east) -- (low_pass.east-|inner_sum.south) node[anchor=south, pos=0.5, signal style] (low_pass_output) {$x$} -- (inner_sum.south);
+    \draw[->] (unit_gain.east) -- (unit_gain.east-|inner_sum.north) -- (inner_sum.north);  
+    \coordinate (mid_left) at ([shift={(-0.5cm,0.1cm)}]low_pass.north west);
+    \coordinate (bot_left) at ([yshift=-0.3cm]low_pass.south);    
+    \coordinate (right_output) at ([xshift=0.5cm]sigma.east);
+
+    \draw[->] (sigma.east) -- (right_output) -- (right_output|-bot_left) -- ([xshift=-1cm]mid_left|-bot_left) |- (mid_left) |- (low_pass.west);
+    \draw[->] (sigma.east) -- (right_output) -- (right_output|-bot_left) -- ([xshift=-1cm]mid_left|-bot_left) |- (mid_left) |- (unit_gain.west);
+
+    \draw[->] (sigma.east) -- (right_output) -- ++(1cm,0) node[anchor=south, pos=0.5, signal style] (output) {$y$};
+
+    \begin{scope}[on background layer]
+        \node[block style=colorVertNull!70,fit=(unit_gain) (low_pass)  (inner_sum) (mid_left)] (high_pass_fit) {};
+    \end{scope}
+    
+    \draw [decorate,decoration={brace,amplitude=5pt}, thick] (high_pass_fit.north west) -- (high_pass_fit.north east)
+    node[pos=0.5, yshift=6pt, anchor=south, block style=colorVertNull!70, text=black, thin] (high_pass) {$\frac{\tau s}{\tau s + 1}$};
+
+    \coordinate (top_left_bb) at (current bounding box.north west);
+    \coordinate (bot_left_bb) at (current bounding box.south west);
+    \coordinate (top_right_bb) at ([xshift=250pt]top_left_bb);
+    \coordinate (bot_right_bb) at ([xshift=250pt]bot_left_bb);
+
+    %\draw[red] (top_left_bb) --(bot_left_bb) -- (bot_right_bb) -- (top_right_bb) -- cycle;
+\end{tikzpicture}
+
+\end{document}

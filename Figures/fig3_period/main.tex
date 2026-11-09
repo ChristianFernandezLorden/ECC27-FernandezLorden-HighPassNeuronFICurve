@@ -1,0 +1,166 @@
+\documentclass[tikz,border=0pt,10pt]{standalone}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+
+
+\input{../pgfplots_style_setup.tex}
+\usetikzlibrary{math}
+\usetikzlibrary{decorations.markings}
+
+\usepackage{Nature-colors}
+
+\pgfplotsset{
+    layers/standard with background/.define layer set={
+        background,
+        axis background,axis grid,axis ticks,axis lines,axis tick labels,
+        pre main,main,
+        axis descriptions,axis foreground
+    }{/pgfplots/layers/standard},
+    set layers=standard with background,
+}
+
+\begin{document}
+    
+\begin{tikzpicture}[
+        title style/.style = {
+                font=\bfseries, 
+                fill=ulgGrey!25, 
+                text width=3.5cm, 
+                align=center
+            },
+    ]
+    \colorlet{colorTm}{natureBlue}
+    \colorlet{colorTp}{natureOrange}
+
+    \colorlet{axisColor}{black!20}
+    \colorlet{plotGreyColor}{black!60}
+    \colorlet{textGreyColor}{black!60}
+
+    \colorlet{colorPlot1}{plotGreyColor}
+    \colorlet{colorPlot2}{plotGreyColor}
+
+    \pgfmathsetlengthmacro{\plotheight}{100pt}
+    \pgfmathsetlengthmacro{\plotsmallheight}{37pt}
+    \pgfmathsetlengthmacro{\plotwidthleft}{100pt}
+    \pgfmathsetlengthmacro{\plotwidthright}{85pt}
+    \pgfmathsetlengthmacro{\plotXsep}{0.77cm}
+    \pgfmathsetlengthmacro{\plotYsep}{0.3cm}
+    \pgfmathsetlengthmacro{\plotrightdown}{-0.4cm}
+    \pgfmathsetlengthmacro{\anglePlotShorten}{0.5cm}
+    \pgfmathsetlengthmacro{\rectXoff}{0.07cm}
+    \pgfmathsetlengthmacro{\rectYoff}{0.2cm}
+    \pgfmathsetlengthmacro{\labelXoff}{0.2cm}
+    \pgfmathsetlengthmacro{\labelYoff}{0.2cm}
+    \pgfmathsetlengthmacro{\titleYoff}{0.1cm}
+
+    \pgfmathsetlengthmacro{\circleradius}{2cm}
+    %\def{\circlecenter}{(\plotwidthleft+\circleradius, -2*\plotheight-1.5*\plotYsep)}
+
+    
+    \pgfplotsset{
+        every axis/.append style={scale only axis},
+        detached axis=0.35cm,
+        axis line style={axisColor},
+        tick style={axisColor},
+        tick label style={text=textGreyColor},
+        label style={font=\Large},
+        width=\plotwidthleft,
+        height=\plotheight,
+        no ticks x axis,
+        no ticks y axis,
+    }
+
+    \begin{axis}[
+            ymin=0,
+            %ymin=-1,ymax=1.8,
+            xlabel = {$u$},
+            ylabel = {$T(u)$},
+            %y unit = \unit{\radian},
+            name=period func plot,
+            ylabel style={inner xsep=1pt, xshift=1pt-.3333em},
+            xlabel style={inner ysep=1pt, yshift=1pt-.3333em},
+        ]
+        \addplot [draw=black, name path=full, thick] table [col sep=comma, x=x, y=full] {data/period.csv};% node[pos=0.5, above, sloped, text=black, font=\footnotesize] {$T(u)$};
+        \addplot [draw=none, name path=tm] table [col sep=comma, x=x, y=left] {data/period.csv};
+        \addplot [fill=colorTm,draw=none, opacity=0.7] table [col sep=comma, x=x, y=left] {data/period.csv} \closedcycle;
+        \addplot[fill=colorTp, opacity=0.7] fill between [of=full and tm];
+        \node[anchor=center, color=white] at (axis description cs:0.2,0.2) {\footnotesize $T^-(u)$};
+        \node[anchor=center, color=white] at (axis description cs:0.8,0.5) {\footnotesize $T^+(u)$};
+
+        \coordinate (top_left) at (axis description cs:0,1);
+        \coordinate (04_point) at (axis cs:-0.4, 0);
+        \coordinate (01_point) at (axis cs:-0.1, 0);
+        \path[name path=line04] (04_point) -- (04_point |- top_left);
+        \path[name path=line01] (01_point) -- (01_point |- top_left);
+        \path[name intersections={of=full and line04, by=P04}];
+        \path[name intersections={of=full and line01, by=P01}];
+        \draw[dashed, color=colorPlot1,thick] (04_point) -- ([yshift=0.18cm]P04) node[anchor=south, xshift=0.1cm, color=black, font=\footnotesize,inner ysep=0pt, inner xsep=2pt] {(1)};
+        \draw[dashed, color=colorPlot2,thick] (01_point) -- ([yshift=0.18cm]P01) node[anchor=south, color=black, font=\footnotesize,inner ysep=0pt, inner xsep=2pt] {(2)};
+    \end{axis}
+
+    \pgfplotsset{
+        enlarge y limits={abs=1pt},
+        width=\plotwidthright,
+        height=\plotsmallheight,
+        hide x axis,
+        axis line style={draw=none},
+        label style={font=\normalsize, inner sep=0pt,anchor=center},
+    }
+
+    \begin{axis}[ 
+            at={($(period func plot.east) + (\plotXsep,\plotrightdown+\plotYsep/2)$)},
+            anchor=south west,
+            ylabel = {(1)},
+        ]
+        \addplot [draw=colorPlot1, name path=spike, thick] table [col sep=comma, x=x, y=y] {data/period_neuron_u04.csv};
+
+        \coordinate (top_right) at (axis description cs:1,1);
+        \coordinate (bot_left) at (axis description cs:0,0);
+        \coordinate (zero_point) at (axis cs:1, 0);
+        \path[name path=line] (zero_point-|bot_left) --(zero_point-|top_right);
+        \path[name intersections={of=spike and line, name=P}];
+    \end{axis}
+
+    \begin{scope}[on background layer]
+        \draw[color=colorTm] ([yshift=0.2cm]P-2|-top_right) -- ([yshift=0.2cm]P-3|-top_right) node[anchor=south, pos=0.5, font=\footnotesize, inner ysep=0pt, yshift=0.3333em] {$T^-(u)$};
+        \draw[colorTm, densely dotted] (P-2) -- ([yshift=0.2cm]P-2|-top_right);
+        \draw[colorTm, densely dotted] (P-3) -- ([yshift=0.2cm]P-3|-top_right);
+        \draw[color=colorTp] ([yshift=0.2cm]P-7|-top_right) -- ([yshift=0.2cm]P-8|-top_right) node[anchor=south, pos=0.5, font=\footnotesize, inner ysep=0pt, yshift=0.3333em] {$T^+(u)$};
+        \draw[colorTp, densely dotted] (P-7) -- ([yshift=0.2cm]P-7|-top_right);
+        \draw[colorTp, densely dotted] (P-8) -- ([yshift=0.2cm]P-8|-top_right);
+    \end{scope}
+
+    \begin{axis}[ 
+            at={($(period func plot.east) + (\plotXsep,\plotrightdown-\plotYsep/2)$)},
+            anchor=north west,
+            ylabel = {(2)},
+        ]
+        \addplot [draw=colorPlot1, name path=spike, thick] table [col sep=comma, x=x, y=y] {data/period_neuron_u01.csv};
+
+        \coordinate (top_right) at (axis description cs:1,1);
+        \coordinate (bot_left) at (axis description cs:0,0);
+        \coordinate (zero_point) at (axis cs:1, 0);
+        \path[name path=line] (zero_point-|bot_left) --(zero_point-|top_right);
+        \path[name intersections={of=spike and line, name=P}];
+    \end{axis}
+
+    \begin{scope}[on background layer]
+        \draw[color=black] ([yshift=-0.2cm]P-7|-bot_left) -- ([yshift=-0.2cm]P-9|-bot_left) node[anchor=north, pos=0.5, font=\footnotesize, inner ysep=0pt, yshift=-0.3333em] {$T(u)$};
+        \draw[black, densely dotted] (P-7) -- ([yshift=-0.2cm]P-7|-bot_left);
+        \draw[black, densely dotted] (P-9) -- ([yshift=-0.2cm]P-9|-bot_left);
+    \end{scope}
+    
+
+    \coordinate (top_left_bb) at (current bounding box.north west);
+    \coordinate (bot_left_bb) at (current bounding box.south west);
+    \coordinate (top_right_bb) at ([xshift=250pt]top_left_bb);
+    \coordinate (bot_right_bb) at ([xshift=250pt]bot_left_bb);
+
+    %\draw[red] (top_left_bb) --(bot_left_bb) -- (bot_right_bb) -- (top_right_bb) -- cycle;
+\end{tikzpicture}
+
+\end{document}

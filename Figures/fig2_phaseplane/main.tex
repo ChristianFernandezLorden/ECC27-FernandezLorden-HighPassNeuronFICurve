@@ -1,0 +1,164 @@
+\documentclass[tikz,border=0pt,10pt]{standalone}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+
+
+\input{../pgfplots_style_setup.tex}
+\usetikzlibrary{math}
+\usetikzlibrary{intersections}
+\usetikzlibrary{decorations.markings}
+\usetikzlibrary{backgrounds}
+
+\usepackage{Nature-colors}
+
+\begin{document}
+    
+\begin{tikzpicture}[
+        title style/.style = {
+                font=\bfseries, 
+                fill=ulgGrey!25, 
+                text width=3.5cm, 
+                align=center
+            },
+    ]
+    \colorlet{colorCycle}{natureBlue}
+    \colorlet{colorPhiNull}{black}
+    \colorlet{colorVertNull}{natureOrange}
+
+    \colorlet{axisColor}{black!20}
+    \colorlet{plotGreyColor}{black!60}
+    \colorlet{textGreyColor}{black!60}
+
+    \pgfmathsetlengthmacro{\plotheight}{170pt}
+    \pgfmathsetlengthmacro{\plotwidthleft}{215pt}
+    \pgfmathsetlengthmacro{\plotXsep}{1.15cm}
+    \pgfmathsetlengthmacro{\plotYsep}{0.1cm}
+    \pgfmathsetlengthmacro{\anglePlotShorten}{0.5cm}
+    \pgfmathsetlengthmacro{\rectXoff}{0.07cm}
+    \pgfmathsetlengthmacro{\rectYoff}{0.2cm}
+    \pgfmathsetlengthmacro{\labelXoff}{0.2cm}
+    \pgfmathsetlengthmacro{\labelYoff}{0.2cm}
+    \pgfmathsetlengthmacro{\titleYoff}{0.1cm}
+
+    \pgfmathsetlengthmacro{\circleradius}{2cm}
+    %\def{\circlecenter}{(\plotwidthleft+\circleradius, -2*\plotheight-1.5*\plotYsep)}
+
+    \tikzset{
+        declare function={
+            atanh(\x) = 0.5 * ln((1+\x)/(1-\x));
+        },
+    }
+    
+    \pgfplotsset{
+        every axis/.append style={scale only axis},
+        detached axis=0.35cm,
+        axis line style={axisColor},
+        tick style={axisColor},
+        tick label style={text=textGreyColor},
+        label style={font=\bfseries\Large},
+        ylabel style={inner xsep=1pt, xshift=1pt-.3333em},
+        xlabel style={inner ysep=1pt, yshift=1pt-.3333em},
+    }
+
+    \pgfmathsetmacro{\g}{2.5}
+    \pgfmathsetmacro{\u}{-0.1}
+
+    \begin{axis}[
+            width=\plotwidthleft,
+            height=\plotheight,
+            xmin=-2.8,xmax=1.7,
+            ymin=-0.8,ymax=0.5,
+            xlabel = {$v$},
+            ylabel = {$z$},
+            %y unit = \unit{\radian},
+            no ticks x axis,
+            no ticks y axis,
+            legend columns=1,
+            legend cell align=left,
+            legend style={draw=none,fill=none,font=\scriptsize,row sep=-0.12cm,/tikz/every even column/.append style={column sep=-0.1cm},
+            at={(0.70,0.2)}, anchor=north west,yshift=0.1cm,inner xsep=0pt, inner ysep=0pt},
+            %legend pos=north west,
+            name=amp mes plot,
+            declare function={
+                mysat(\x) = (\x > 0) ? 0.5*tanh(2 * \x) : 2*tanh(0.5 * \x);
+            },
+        ]
+
+        \tikzmath{
+            \Av = 2*atanh(-sqrt((\g - 1)/\g))/\g;
+            \Az = 2*tanh(0.5*\g*\Av) - \Av;
+            \Bv = atanh(sqrt((\g - 1)/\g))/(2*\g);
+            \Bz = 0.5*tanh(2*\g*\Bv) - \Bv;
+            \VPv = 1.5;
+            for \i in {1,...,12}{
+                \VPv = \VPv - (0.5*tanh(2*\g*\VPv) - \VPv - \Az)/(\g*(1 - tanh(2*\g*\VPv)^2) - 1);
+            };
+            \VPz = \Az;
+            \VMv = -2.5;
+            for \i in {1,...,12}{
+                \VMv = \VMv - (2*tanh(0.5*\g*\VMv) - \VMv - \Bz)/(\g*(1 - tanh(0.5*\g*\VMv)^2) - 1);
+            };
+            \VMz = \Bz;
+            \Uz = mysat(\g*\u) - \u;
+        }   
+
+        \draw[colorVertNull, thick] (\u,0.5) -- (\u,-0.8) node[pos=0.0, below right] {$\dot z=0 \Leftrightarrow v=u$} node[pos=0.11, right, font=\scriptsize, opacity=0.7] {$\dot z > 0$} node[pos=0.11, left, font=\scriptsize, opacity=0.7] {$\dot z < 0$} coordinate[pos=1] (u_bottom);
+        \addplot [color=colorPhiNull,domain=-2.5:\Av,samples=50, thick] {mysat(\g*x) - x} node[pos=0.0, below right,xshift=3pt] {$\dot v=0 \Leftrightarrow z=\psi(v)$} node[pos=0.11, right, font=\scriptsize, opacity=0.7] {$\dot v < 0$} node[pos=0.11, left, font=\scriptsize, opacity=0.7] {$\dot v > 0$};
+        \addplot [color=colorPhiNull,domain=\Av:\Bv,samples=50, thick, dashdotted] {mysat(\g*x) - x};
+        \addplot [color=colorPhiNull,domain=\Bv:1.7,samples=50, thick] {mysat(\g*x) - x};
+
+        \filldraw[draw=colorVertNull, fill=white, thick, font=\scriptsize, align=center] (\u, \Uz) circle (2.5pt) node[left] {Fixed point\\$(u,\psi(u))$};
+
+        \coordinate (a) at (\Av,\Az);
+        \coordinate (b) at (\Bv,\Bz);
+        \node[above] at (a) {$\mathbf{a}$};
+        \node[above] at (b) {$\mathbf{b}$};
+        \fill[colorCycle] (a) circle (2pt);
+        \fill[colorCycle] (b) circle (2pt);
+
+        \coordinate (v+) at (\VPv,\VPz);
+        \coordinate (v-) at (\VMv,\VMz);
+        \node[above right] at (v+) {$\mathbf{v^+}$};
+        \node[above right] at (v-) {$\mathbf{v^-}$};
+        \fill[colorCycle] (v+) circle (2pt);
+        \fill[colorCycle] (v-) circle (2pt);
+
+        \begin{scope}[decoration={
+            markings,
+            mark=at position 0.5 with {\arrow{Triangle[]}}}
+            ] 
+            \addplot [color=colorCycle,domain=\VMv:\Av,samples=50, ultra thick,postaction={decorate}] {mysat(\g*x) - x} node[pos=0.6, pin={[pin edge={colorCycle},pin distance=5pt, font=\small]-120:$V^-(z)$}] {};
+            \addplot [color=colorCycle,domain=\VPv:\Bv,samples=50, ultra thick,postaction={decorate}] {mysat(\g*x) - x} node[pos=0.6, pin={[pin edge={colorCycle},pin distance=5pt, font=\small]60:$V^+(z)$}] {};
+            \draw[colorCycle, ultra thick, dashed,postaction={decorate}] (a) -- (v+);
+            \draw[colorCycle, ultra thick, dashed,postaction={decorate}] (b) -- (v-);
+        \end{scope}
+
+        \coordinate (left_axis) at (yticklabel* cs:0.5);
+        \coordinate (bot_axis) at (xticklabel* cs:0.5);
+    \end{axis}
+
+    \begin{scope}[on background layer]
+        \draw[axisColor, dashed] (left_axis|-v-) node[anchor=east, font=\scriptsize, inner xsep=1pt, xshift=1pt-.3333em]{$\psi(b)$} -- (v-);
+        \draw[axisColor, dashed] (left_axis|-a) node[anchor=east, font=\scriptsize, inner xsep=1pt, xshift=1pt-.3333em]{$\psi(a)$} -- (a);
+
+        \draw[axisColor, dashed] (bot_axis-|v-) node[yshift=-8pt, anchor=base, font=\scriptsize]{$v^-$} -- (v-);
+        \draw[axisColor, dashed] (bot_axis-|a) node[yshift=-8pt, anchor=base, font=\scriptsize]{$a$} -- (a);
+        \draw[axisColor, dashed] (bot_axis-|b) node[yshift=-8pt, anchor=base, font=\scriptsize]{$b$} -- (b);
+        \draw[axisColor, dashed] (bot_axis-|v+) node[yshift=-8pt, anchor=base, font=\scriptsize]{$v^+$} -- (v+);
+
+        \draw[colorVertNull, dashed]  (bot_axis-|u_bottom) node[yshift=-8pt, anchor=base, font=\scriptsize]{$u$} --(u_bottom);
+    \end{scope}
+
+    \coordinate (top_left_bb) at (current bounding box.north west);
+    \coordinate (bot_left_bb) at (current bounding box.south west);
+    \coordinate (top_right_bb) at ([xshift=250pt]top_left_bb);
+    \coordinate (bot_right_bb) at ([xshift=250pt]bot_left_bb);
+
+    %\draw[red] (top_left_bb) --(bot_left_bb) -- (bot_right_bb) -- (top_right_bb) -- cycle;
+\end{tikzpicture}
+
+\end{document}
