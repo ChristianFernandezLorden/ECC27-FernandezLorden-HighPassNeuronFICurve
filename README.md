@@ -46,9 +46,19 @@ then run `FI_curve_example.ipynb` (e.g. with Jupyter + IJulia, or VS Code).
 
 Each figure compiles independently:
 
+**Linux / macOS**
+
 ```bash
 cd Figures/figN_<name>
-pdflatex main.tex
+TEXINPUTS=..: lualatex main.tex
+```
+
+**Windows (cmd)**
+
+```bat
+cd Figures\figN_<name>
+set "TEXINPUTS=..;"
+lualatex main.tex
 ```
 
 ## Citation
@@ -59,6 +69,7 @@ If you use this code, please cite:
 @misc{fernandezlorden2026HPFICurve,
     title={Characterization of the Frequency-Current Curve of First-Order High-Pass Neurons}, 
     author={Fernandez Lorden, Christian and Adriaens, Jérôme and Franci, Alessio and Bainier, Gustave},
+    month=nov,
     year={2026},
     eprint={2611.09508},
     archivePrefix={arXiv},
